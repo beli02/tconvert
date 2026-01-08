@@ -1,8 +1,8 @@
 # TCONVERT - Telegram File Converter Bot
 
-I built this Telegram bot to quickly convert files I get from friends and clients. It handles images, videos, audio, and documents without fuss, and it speaks multiple languages.
+I built this Telegram bot because I keep getting files in all sorts of formats from friends and clients. It converts images, videos, audio, and documents without fuss, and it speaks multiple languages so everyone can use it.
 
-## 🚀 Features
+## Features
 
 - **Image Conversion**: JPG, PNG, WEBP, GIF, PDF
 - **Video Conversion**: MP4, GIF extraction, MP3 audio extraction
@@ -10,9 +10,9 @@ I built this Telegram bot to quickly convert files I get from friends and client
 - **Document Conversion**: PDF from DOCX, DOC, ODT
 - **Multilingual**: English, Spanish, French, German, Italian, Portuguese, Russian, Arabic, Chinese, Japanese
 - **File Size**: Up to 20MB per file
-- **Smart Processing**: Auto-resize images to 1080px max, optimized quality
+- **Smart Processing**: Auto-resize images to 1080px max, tuned for size and quality
 
-## 🏗️ Architecture
+## Architecture
 
 ### Technology Stack
 - **TypeScript** - Type-safe development
@@ -57,7 +57,7 @@ src/
 └── types.ts            # TypeScript interfaces and type definitions
 ```
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 - Node.js 20+
@@ -88,7 +88,7 @@ NODE_ENV=development
 npm run dev
 ```
 
-## 🚢 Deployment
+## Deployment
 
 ### Deploy to Render (Recommended)
 
@@ -132,17 +132,17 @@ docker run -d \
   tconvert-bot
 ```
 
-## 🔧 Available Commands
+## Available Commands
 
 - `/start` - Start the bot and see welcome message
 - `/help` - Display help information
 - `/language` - Change bot language (10 languages available)
 
-## 🌍 Supported Languages
+## Supported Languages
 
 English, Español, Français, Deutsch, Italiano, Português, Русский, العربية, 中文, 日本語
 
-## 📝 API Scripts
+## Scripts
 
 ```bash
 npm run dev          # Development mode with hot reload
@@ -151,7 +151,7 @@ npm start            # Run production build
 npm test             # Run converter tests
 ```
 
-## 🔍 Technical Details
+## Technical Details
 
 ### Conversion Limits
 - **File Size**: Maximum 20MB
@@ -173,7 +173,7 @@ npm test             # Run converter tests
 - Input validation and sanitization
 - Rate limiting through Telegram's built-in controls
 
-## 🛠️ Development
+## Development
 
 ### Project Commands
 ```bash
@@ -189,13 +189,13 @@ npm start            # Production server
 - `WEBHOOK_URL` - Required for production: Your public URL
 - `NODE_ENV` - Environment mode (development/production)
 
-## 📊 Monitoring
+## Monitoring
 
 - **Health Check**: `https://your-app.onrender.com/health`
 - **Status Page**: `https://your-app.onrender.com/`
 - **Logs**: Available in Render Dashboard
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 **Bot not responding:**
 - Check `TELEGRAM_TOKEN` is correct
@@ -212,7 +212,7 @@ npm start            # Production server
 - Consider upgrading Render plan
 - Video conversions take longer than images
 
-## 📄 License
+## License
 
 License: All rights reserved © 2026 Blagoevski Dimitar.
 - Personal/non-commercial viewing only.
@@ -221,7 +221,7 @@ License: All rights reserved © 2026 Blagoevski Dimitar.
 
 See [LICENSE](LICENSE) for full terms.
 
-## 🤝 Contributing
+## Contributing
 
 This project is open to suggestions, but main stays protected. If you have an idea:
 - Open an issue first so we can discuss it.
@@ -230,4 +230,4 @@ This project is open to suggestions, but main stays protected. If you have an id
 
 ---
 
-Built by Blagoevski Dimitar using TypeScript and grammY
+Built by Blagoevski Dimitar using TypeScript and grammY.
