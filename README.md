@@ -1,6 +1,6 @@
 # TCONVERT - Telegram File Converter Bot
 
-A powerful multilingual Telegram bot that converts files between various formats with support for images, videos, audio, and documents.
+I built this Telegram bot to quickly convert files I get from friends and clients. It handles images, videos, audio, and documents without fuss, and it speaks multiple languages.
 
 ## 🚀 Features
 
@@ -223,12 +223,11 @@ See [LICENSE](LICENSE) for full terms.
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+This project is open to suggestions, but main stays protected. If you have an idea:
+- Open an issue first so we can discuss it.
+- If we agree, fork the repo and send a pull request.
+- No direct pushes to main; changes only land after review and approval.
 
 ---
 
-Built with ❤️ using TypeScript and grammY
+Built by Blagoevski Dimitar using TypeScript and grammY
