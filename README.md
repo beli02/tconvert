@@ -214,7 +214,7 @@ npm start            # Production server
 
 ## 📄 License
 
-License: MIT © 2026 Blagoevski Dimitar. See [LICENSE](LICENSE) for terms.
+License: All rights reserved © 2026 Blagoevski Dimitar. Personal/non-commercial viewing only. See [LICENSE](LICENSE) for terms.
 
 ## 🤝 Contributing
 
