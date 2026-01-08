@@ -214,7 +214,12 @@ npm start            # Production server
 
 ## 📄 License
 
-License: All rights reserved © 2026 Blagoevski Dimitar. Personal/non-commercial viewing only. See [LICENSE](LICENSE) for terms.
+License: All rights reserved © 2026 Blagoevski Dimitar.
+- Personal/non-commercial viewing only.
+- No redistribution or modification without written permission.
+- All commercial rights reserved to the author; others need a commercial license.
+
+See [LICENSE](LICENSE) for full terms.
 
 ## 🤝 Contributing
 
