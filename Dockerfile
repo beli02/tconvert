@@ -1,58 +1,48 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Production Dockerfile for Self-Hosting
+FROM node:20-bookworm-slim
 
-# Install build dependencies for native modules
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    cairo-dev \
-    jpeg-dev \
-    pango-dev \
-    giflib-dev
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source code
-COPY src ./src
-
-# Build TypeScript
-RUN npm run build
-
-# Production stage
-FROM node:20-alpine
-
-# Install runtime dependencies
-RUN apk add --no-cache \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
     ffmpeg \
     libreoffice \
-    cairo \
-    jpeg \
-    pango \
-    giflib \
-    font-noto
+    libreoffice-writer \
+    libreoffice-calc \
+    libreoffice-impress \
+    fonts-dejavu-core \
+    fonts-liberation \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and source code
 COPY package*.json ./
+COPY tsconfig.json ./
+COPY src/ ./src/
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install ALL dependencies (including TypeScript)
+RUN npm ci
 
-# Copy built files from builder
-COPY --from=builder /app/dist ./dist
+# Build TypeScript
+RUN npm run build
 
-# Create temp directory with proper permissions
+# Remove dev dependencies and source files after build
+RUN npm prune --production && rm -rf src/
+
+# Create temp directory
 RUN mkdir -p /tmp/tconvert && chmod 777 /tmp/tconvert
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:3000/ping || exit 1
+
+# Run the application
+CMD ["node", "dist/server.js"]
+
 
 # Set environment to production
 ENV NODE_ENV=production

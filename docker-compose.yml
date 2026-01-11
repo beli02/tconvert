@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Node.js Telegram Bot
+  tconvert-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tconvert-bot
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - BOT_TOKEN=${BOT_TOKEN}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - PORT=3000
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - /tmp/tconvert:/tmp/tconvert
+    networks:
+      - tconvert-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: tconvert-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl/certbot/conf:/etc/letsencrypt:ro
+      - ./ssl/certbot/www:/var/www/certbot:ro
+      - ./nginx-logs:/var/log/nginx
+    depends_on:
+      - tconvert-bot
+    networks:
+      - tconvert-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Certbot for SSL (runs on demand, not always)
+  certbot:
+    image: certbot/certbot
+    container_name: tconvert-certbot
+    volumes:
+      - ./ssl/certbot/conf:/etc/letsencrypt
+      - ./ssl/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - tconvert-network
+
+networks:
+  tconvert-network:
+    driver: bridge
