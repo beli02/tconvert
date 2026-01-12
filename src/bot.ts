@@ -4,7 +4,7 @@ import path from 'path';
 import https from 'https';
 import http from 'http';
 import type { PendingConversion, MIME_TO_FORMAT, FORMAT_LABELS } from './types.js';
-import { convertFile, cleanupFile } from './converter.js';
+import { convertFile, cleanupFile, MAX_FILE_SIZE } from './converter.js';
 import { t, LANGUAGES, SupportedLanguage } from './i18n.js';
 
 // Store pending conversions per user
@@ -60,9 +60,12 @@ async function downloadFile(url: string, outputPath: string): Promise<void> {
  */
 async function ensureTempDir(): Promise<void> {
   try {
-    await fs.mkdir(TEMP_DIR, { recursive: true });
-  } catch (error) {
-    console.error('Failed to create temp directory:', error);
+    await fs.mkdir(TEMP_DIR, { recursive: true, mode: 0o700 });
+    // Skip chmod if already created by Dockerfile
+  } catch (error: any) {
+    if (error?.code !== 'EEXIST') {
+      console.error('Failed to create temp directory:', error);
+    }
   }
 }
 
@@ -344,8 +347,21 @@ export function createBot(token: string): Bot {
         await ctx.answerCallbackQuery({ text: errMsgs[lang] });
         return;
       }
+
+      // Enforce size limit before downloading
+      if (pending.fileSize && pending.fileSize > MAX_FILE_SIZE) {
+        const tooBig = {
+          en: '❌ File too large (max 20MB)',
+          es: '❌ Archivo demasiado grande (máx 20MB)',
+          ru: '❌ Файл слишком большой (макс 20MB)',
+          ar: '❌ الملف كبير جدًا (بحد أقصى 20MB)'
+        };
+        await ctx.answerCallbackQuery({ text: tooBig[lang], show_alert: true });
+        pendingConversions.delete(userId);
+        return;
+      }
       
-      console.log(`🔄 Converting file to ${targetFormat} for user ${userId}`);
+      console.log(`🔄 Converting file to ${targetFormat}`);
       
       const convertingMsgs = {
         en: '⏳ Converting...',
@@ -370,7 +386,7 @@ export function createBot(token: string): Bot {
       let outputPath: string | undefined;
       
       try {
-        console.log(`📥 Downloading file: ${pending.fileId}`);
+        console.log('📥 Downloading file');
         const file = await ctx.api.getFile(pending.fileId);
         const downloadUrl = `https://api.telegram.org/file/bot${token}/${file.file_path}`;
         
@@ -383,7 +399,7 @@ export function createBot(token: string): Bot {
         
         console.log(`🔧 Converting to ${targetFormat}`);
         outputPath = await convertFile(inputPath, pending.originalMime, targetFormat);
-        console.log(`✅ Conversion complete`);
+        console.log('✅ Conversion complete');
         
         const { InputFile } = await import('grammy');
         await ctx.replyWithDocument(
@@ -491,7 +507,7 @@ export function createBot(token: string): Bot {
       const fileSize = doc.file_size || 0;
       
       // Check file size (20MB limit)
-      if (fileSize > 20 * 1024 * 1024) {
+      if (fileSize > MAX_FILE_SIZE) {
         const errMsgs = {
           en: '❌ *File Too Large*\n\nMax size: 20MB',
           es: '❌ *Archivo Muy Grande*\n\nTamaño máx: 20MB',
@@ -550,7 +566,7 @@ export function createBot(token: string): Bot {
       const fileSize = video.file_size || 0;
       
       // Check file size
-      if (fileSize > 20 * 1024 * 1024) {
+      if (fileSize > MAX_FILE_SIZE) {
         const errMsgs = {
           en: '❌ *File Too Large*\n\nMax size: 20MB',
           es: '❌ *Archivo Muy Grande*\n\nTamaño máx: 20MB',
@@ -608,7 +624,7 @@ export function createBot(token: string): Bot {
       const fileName = audio.file_name || 'Audio';
       const fileSize = audio.file_size || 0;
       
-      if (fileSize > 20 * 1024 * 1024) {
+      if (fileSize > MAX_FILE_SIZE) {
         const errMsgs = {
           en: '❌ *File Too Large*\n\nMax size: 20MB',
           es: '❌ *Archivo Muy Grande*\n\nTamaño máx: 20MB',

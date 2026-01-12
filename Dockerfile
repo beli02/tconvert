@@ -30,22 +30,16 @@ RUN npm run build
 # Remove dev dependencies and source files after build
 RUN npm prune --production && rm -rf src/
 
-# Create temp directory
-RUN mkdir -p /tmp/tconvert && chmod 777 /tmp/tconvert
-
-# Expose port
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:3000/ping || exit 1
-
-# Run the application
-CMD ["node", "dist/server.js"]
-
+# Create temp directory with restricted perms and prepare non-root user
+RUN mkdir -p /tmp/tconvert \ 
+  && chmod 700 /tmp/tconvert \ 
+  && chown -R node:node /app /tmp/tconvert
 
 # Set environment to production
 ENV NODE_ENV=production
+
+# Drop privileges
+USER node
 
 # Expose port
 EXPOSE 3000

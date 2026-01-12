@@ -10,7 +10,7 @@ import path from 'path';
 const libreConvert = promisify(libre.convert);
 
 // Constants
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const IMAGE_TIMEOUT = 30000; // 30 seconds
 const VIDEO_TIMEOUT = 120000; // 120 seconds
 const MAX_IMAGE_SIZE = 1080; // Max dimension in pixels
@@ -54,6 +54,26 @@ function createTimeout(ms: number, operation: string): Promise<never> {
 }
 
 /**
+ * Validate MIME type and file safety
+ */
+function validateMimeSafety(mime: string, filePath: string): boolean {
+  const ext = path.extname(filePath).toLowerCase();
+  const dangerous = ['.exe', '.sh', '.bat', '.cmd', '.com', '.scr', '.vbs', '.js', '.jar', '.app', '.deb', '.rpm'];
+  
+  if (dangerous.includes(ext)) {
+    return false;
+  }
+  
+  // Block script MIME types
+  const dangerousMimes = ['application/x-executable', 'application/x-sh', 'application/x-bat'];
+  if (dangerousMimes.some(d => mime.includes(d))) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
  * Determine if format is supported for conversion
  */
 function isValidConversion(inputMime: string, targetFormat: string): boolean {
@@ -84,14 +104,18 @@ async function convertImage(
   targetFormat: string,
   quality: number = 90
 ): Promise<string> {
-  const outputPath = inputPath.replace(path.extname(inputPath), `.${targetFormat}`);
+  const baseName = path.basename(inputPath, path.extname(inputPath));
+  const dirName = path.dirname(inputPath);
+  const outputPath = path.join(dirName, `${baseName}_converted.${targetFormat}`);
   
   try {
     const image = sharp(inputPath);
     const metadata = await image.metadata();
     
+    // Strip EXIF for privacy
+    let pipeline = image.rotate(); // auto-orient then strip
+    
     // Resize if needed (preserve aspect ratio)
-    let pipeline = image;
     if (metadata.width && metadata.height) {
       const maxDimension = Math.max(metadata.width, metadata.height);
       if (maxDimension > MAX_IMAGE_SIZE) {
@@ -239,7 +263,9 @@ async function convertMedia(
   inputMime: string,
   targetFormat: string
 ): Promise<string> {
-  const outputPath = inputPath.replace(path.extname(inputPath), `.${targetFormat}`);
+  const baseName = path.basename(inputPath, path.extname(inputPath));
+  const dirName = path.dirname(inputPath);
+  const outputPath = path.join(dirName, `${baseName}_converted.${targetFormat}`);
   
   return new Promise((resolve, reject) => {
     let command = ffmpeg(inputPath);
@@ -326,7 +352,9 @@ async function convertDocument(
   inputPath: string,
   targetFormat: string
 ): Promise<string> {
-  const outputPath = inputPath.replace(path.extname(inputPath), `.${targetFormat}`);
+  const baseName = path.basename(inputPath, path.extname(inputPath));
+  const dirName = path.dirname(inputPath);
+  const outputPath = path.join(dirName, `${baseName}_converted.${targetFormat}`);
   
   try {
     const inputBuffer = await fs.readFile(inputPath);
@@ -366,6 +394,11 @@ export async function convertFile(
   try {
     // Validate file exists and size
     await validateFileSize(inputPath);
+    
+    // Block dangerous files
+    if (!validateMimeSafety(inputMime, inputPath)) {
+      throw new Error('File type not allowed');
+    }
     
     // Validate conversion is supported
     if (!isValidConversion(inputMime, targetFormat)) {
