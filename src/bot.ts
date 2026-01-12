@@ -13,6 +13,10 @@ const pendingConversions = new Map<number, PendingConversion>();
 // Store user language preferences
 const userLanguages = new Map<number, SupportedLanguage>();
 
+// Track conversion count for sponsor messages
+let conversionCount = 0;
+const SPONSOR_INTERVAL = 10; // Show sponsor every 10 conversions
+
 // Temp directory for file operations
 const TEMP_DIR = '/tmp/tconvert';
 
@@ -134,7 +138,9 @@ function getMainMenu(lang: SupportedLanguage = 'en'): InlineKeyboard {
     .text(l.language, 'menu:language')
     .row()
     .text(l.help, 'menu:help')
-    .text(l.about, 'menu:about');
+    .text(l.about, 'menu:about')
+    .row()
+    .url('☕ Support Us', 'https://buymeacoffee.com/yourname');
 }
 
 
@@ -292,10 +298,10 @@ export function createBot(token: string): Bot {
       
       if (action === 'about') {
         const aboutMsgs = {
-          en: 'ℹ️ *About File Converter Bot*\n\n👨‍💻 *Version:* 1.0.0\n⚡ *Framework:* grammY\n🔧 *Built with:* TypeScript\n🎨 *Features:*\n• Multi-format file conversion\n• 4 language support\n• Fast processing\n• Secure file handling\n\n📦 *Supported Formats:* 50+\n✨ *Status:* Fully Operational',
-          es: 'ℹ️ *Acerca del Bot Convertidor*\n\n👨‍💻 *Versión:* 1.0.0\n⚡ *Framework:* grammY\n🔧 *Construido con:* TypeScript\n🎨 *Características:*\n• Conversión multi-formato\n• Soporte de 4 idiomas\n• Procesamiento rápido\n• Manejo seguro de archivos\n\n📦 *Formatos Soportados:* 50+\n✨ *Estado:* Totalmente Operativo',
-          ru: 'ℹ️ *О Боте Конвертера*\n\n👨‍💻 *Версия:* 1.0.0\n⚡ *Фреймворк:* grammY\n🔧 *Разработан на:* TypeScript\n🎨 *Возможности:*\n• Мультиформатная конвертация\n• Поддержка 4 языков\n• Быстрая обработка\n• Безопасная работа с файлами\n\n📦 *Поддерживаемые Форматы:* 50+\n✨ *Статус:* Полностью Работает',
-          ar: 'ℹ️ *حول بوت المحول*\n\n👨‍💻 *الإصدار:* 1.0.0\n⚡ *الإطار:* grammY\n🔧 *مبني بـ:* TypeScript\n🎨 *الميزات:*\n• تحويل متعدد الصيغ\n• دعم 4 لغات\n• معالجة سريعة\n• معالجة آمنة للملفات\n\n📦 *الصيغ المدعومة:* 50+\n✨ *الحالة:* يعمل بالكامل'
+          en: 'ℹ️ *About File Converter Bot*\n\n👨‍💻 *Version:* 1.0.0\n⚡ *Framework:* grammY\n🔧 *Built with:* TypeScript\n🎨 *Features:*\n• Multi-format file conversion\n• 4 language support\n• Fast processing\n• Secure file handling\n\n📦 *Supported Formats:* 50+\n✨ *Status:* Fully Operational\n\n💝 *Like this bot?*\nConsider supporting us!\n\n📢 *Interested in sponsorship?*\nContact: @yourusername',
+          es: 'ℹ️ *Acerca del Bot Convertidor*\n\n👨‍💻 *Versión:* 1.0.0\n⚡ *Framework:* grammY\n🔧 *Construido con:* TypeScript\n🎨 *Características:*\n• Conversión multi-formato\n• Soporte de 4 idiomas\n• Procesamiento rápido\n• Manejo seguro de archivos\n\n📦 *Formatos Soportados:* 50+\n✨ *Estado:* Totalmente Operativo\n\n💝 *¿Te gusta este bot?*\n¡Considera apoyarnos!\n\n📢 *¿Interesado en patrocinio?*\nContacto: @yourusername',
+          ru: 'ℹ️ *О Боте Конвертера*\n\n👨‍💻 *Версия:* 1.0.0\n⚡ *Фреймворк:* grammY\n🔧 *Разработан на:* TypeScript\n🎨 *Возможности:*\n• Мультиформатная конвертация\n• Поддержка 4 языков\n• Быстрая обработка\n• Безопасная работа с файлами\n\n📦 *Поддерживаемые Форматы:* 50+\n✨ *Статус:* Полностью Работает\n\n💝 *Нравится бот?*\nПоддержите нас!\n\n📢 *Интересует спонсорство?*\nКонтакт: @yourusername',
+          ar: 'ℹ️ *حول بوت المحول*\n\n👨‍💻 *الإصدار:* 1.0.0\n⚡ *الإطار:* grammY\n🔧 *مبني بـ:* TypeScript\n🎨 *الميزات:*\n• تحويل متعدد الصيغ\n• دعم 4 لغات\n• معالجة سريعة\n• معالجة آمنة للملفات\n\n📦 *الصيغ المدعومة:* 50+\n✨ *الحالة:* يعمل بالكامل\n\n💝 *أعجبك البوت؟*\nادعمنا!\n\n📢 *مهتم بالرعاية؟*\nاتصل: @yourusername'
         };
         
         await ctx.answerCallbackQuery();
@@ -400,6 +406,21 @@ export function createBot(token: string): Bot {
         console.log(`🔧 Converting to ${targetFormat}`);
         outputPath = await convertFile(inputPath, pending.originalMime, targetFormat);
         console.log('✅ Conversion complete');
+        
+        // Increment conversion counter
+        conversionCount++;
+        
+        // Show sponsor message every N conversions
+        if (conversionCount % SPONSOR_INTERVAL === 0) {
+          const sponsorMsgs = {
+            en: '🌟 *This conversion brought to you by:*\n\n🚀 **[Your Sponsor Name]** - Brief sponsor description\n\n_Interested in sponsoring? Contact @yourusername_',
+            es: '🌟 *Esta conversión patrocinada por:*\n\n🚀 **[Nombre del Patrocinador]** - Breve descripción\n\n_¿Interesado en patrocinar? Contacta @yourusername_',
+            ru: '🌟 *Эта конвертация спонсируется:*\n\n🚀 **[Имя Спонсора]** - Краткое описание\n\n_Заинтересованы в спонсорстве? Свяжитесь @yourusername_',
+            ar: '🌟 *هذا التحويل برعاية:*\n\n🚀 **[اسم الراعي]** - وصف مختصر\n\n_مهتم بالرعاية؟ اتصل @yourusername_'
+          };
+          
+          await ctx.reply(sponsorMsgs[lang], { parse_mode: 'Markdown' });
+        }
         
         const { InputFile } = await import('grammy');
         await ctx.replyWithDocument(
